@@ -1,0 +1,11 @@
+# INSTALL SPARK CONTAINER
+
+FROM sdesilva26/spark_base
+
+ENV SPARK_MASTER_PORT 7077
+ENV SPARK_MASTER_WEBUI_PORT 8080
+ENV SPARK_MASTER_LOG /spark/logs
+
+EXPOSE 8081
+
+ENTRYPOINT $SPARK_HOME/bin/spark-class org.apache.spark.deploy.master.Master

@@ -1,0 +1,47 @@
+version: "1"
+services:
+  spark-master:
+    image: ./spark/master
+    ports:
+      - "8080:8080"
+    networks:
+      - spark-net
+    deploy:
+      placement:
+        # set node labels using docker node update --label-add key=value <NODE ID> from swarm manager
+        constraints:
+          - node.labels.role==master
+  spark-worker:
+    build: ./spark/worker
+    ports:
+      - "8081:8081"
+    environment:
+      - CORES=3
+      - MEMORY=15G
+    deploy:
+      placement:
+        # set node labels using docker node update --label-add key=value <NODE ID> from swarm manager
+        constraints:
+          - node.labels.role==worker
+      replicas: 3
+    networks:
+      - spark-net
+  airflow:
+    build: ./airflow
+    restart: always
+    container_name: airflow
+    volumes:
+      - ./mnt/airflow/airflow.cfg:/usr/local/airflow/airflow.cfg
+      - ./mnt/airflow/dags:/usr/local/airflow/dags
+    ports:
+      - 8080:8082
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "airflow", "8080" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    networks:
+      - spark-net
+networks:
+  spark-net:
+    driver: overlay
